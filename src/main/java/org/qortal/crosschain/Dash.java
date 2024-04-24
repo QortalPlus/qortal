@@ -47,6 +47,7 @@ public class Dash extends Bitcoiny {
 				List<ElectrumX.Server> defaultServers = Arrays.asList(
 					// Servers chosen on NO BASIS WHATSOEVER from various sources!
 					// Status verified at https://1209k.com/bitcoin-eye/ele.php?chain=dash
+					new Server("bch.reichster.de", Server.ConnectionType.SSL, 60002),
 					new Server("electrum1.cipig.net", Server.ConnectionType.SSL, 20061),
 					new Server("electrum2.cipig.net", Server.ConnectionType.SSL, 20061),
 					new Server("electrum3.cipig.net", Server.ConnectionType.SSL, 20061)

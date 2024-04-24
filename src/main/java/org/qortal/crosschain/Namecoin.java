@@ -47,7 +47,12 @@ public class Namecoin extends Bitcoiny {
 				List<ElectrumX.Server> defaultServers = Arrays.asList(
 					// Servers chosen on NO BASIS WHATSOEVER from various sources!
 					// Status verified at https://1209k.com/bitcoin-eye/ele.php?chain=nmc
+					new Server("162.212.154.52", Server.ConnectionType.SSL, 50002),
 					new Server("46.229.238.187", Server.ConnectionType.SSL, 57002),
+					new Server("electrumx1.nmc.dotbit.zone", Server.ConnectionType.SSL, 50002),
+					new Server("electrumx2.nmc.dotbit.zone", Server.ConnectionType.SSL, 50002),
+					new Server("electrumx3.nmc.dotbit.zone", Server.ConnectionType.SSL, 50002),
+					new Server("electrumx4.nmc.dotbit.zone", Server.ConnectionType.SSL, 50002),
 					new Server("nmc2.bitcoins.sk", Server.ConnectionType.SSL, 57002)
 				);
 

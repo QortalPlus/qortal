@@ -47,6 +47,7 @@ public class Firo extends Bitcoiny {
 				List<ElectrumX.Server> defaultServers = Arrays.asList(
 					// Servers chosen on NO BASIS WHATSOEVER from various sources!
 					// Status verified at https://1209k.com/bitcoin-eye/ele.php?chain=firo
+					new Server("electrumx.firo.org", Server.ConnectionType.SSL, 50002),
 					new Server("electrumx01.firo.org", Server.ConnectionType.SSL, 50002),
 					new Server("electrumx02.firo.org", Server.ConnectionType.SSL, 50002),
 					new Server("electrumx03.firo.org", Server.ConnectionType.SSL, 50002),
