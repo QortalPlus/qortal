@@ -1,6 +1,7 @@
 package org.qortal.api.resource;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -26,6 +27,7 @@ import javax.ws.rs.GET;
 import javax.ws.rs.HeaderParam;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import java.util.List;
@@ -261,8 +263,123 @@ public class CrossChainDogecoinResource {
 					)
 			}
 	)
-	public ServerConfigurationInfo getServerConfiguration() {
+	public ServerConfigurationInfo getServerConfiguration(@Parameter(
+		description = "Returns info for the currently connected server only"
+	) @QueryParam("current") Boolean current) {
 
-		return CrossChainUtils.buildServerConfigurationInfo(Dogecoin.getInstance());
+		return CrossChainUtils.buildServerConfigurationInfo(Dogecoin.getInstance(), current);
+	}
+
+	@GET
+	@Path("/feekb")
+	@Operation(
+			summary = "Returns Dogecoin fee per Kb.",
+			description = "Returns Dogecoin fee per Kb.",
+			responses = {
+					@ApiResponse(
+							content = @Content(
+									schema = @Schema(
+											type = "number"
+									)
+							)
+					)
+			}
+	)
+	public String getDogecoinFeePerKb() {
+		Dogecoin dogecoin = Dogecoin.getInstance();
+
+		return String.valueOf(dogecoin.getFeePerKb().value);
+	}
+
+	@POST
+	@Path("/updatefeekb")
+	@Operation(
+			summary = "Sets Dogecoin fee per Kb.",
+			description = "Sets Dogecoin fee per Kb.",
+			requestBody = @RequestBody(
+					required = true,
+					content = @Content(
+							mediaType = MediaType.TEXT_PLAIN,
+							schema = @Schema(
+									type = "number",
+									description = "the fee per Kb",
+									example = "100"
+							)
+					)
+			),
+			responses = {
+					@ApiResponse(
+							content = @Content(mediaType = MediaType.TEXT_PLAIN, schema = @Schema(type = "number", description = "fee"))
+					)
+			}
+	)
+	@ApiErrors({ApiError.INVALID_PRIVATE_KEY, ApiError.INVALID_CRITERIA})
+	public String setDogecoinFeePerKb(@HeaderParam(Security.API_KEY_HEADER) String apiKey, String fee) {
+		Security.checkApiCallAllowed(request);
+
+		Dogecoin dogecoin = Dogecoin.getInstance();
+
+		try {
+			return CrossChainUtils.setFeePerKb(dogecoin, fee);
+		} catch (IllegalArgumentException e) {
+			throw ApiExceptionFactory.INSTANCE.createException(request, ApiError.INVALID_CRITERIA);
+		}
+	}
+
+	@GET
+	@Path("/feeceiling")
+	@Operation(
+			summary = "Returns Dogecoin fee per Kb.",
+			description = "Returns Dogecoin fee per Kb.",
+			responses = {
+					@ApiResponse(
+							content = @Content(
+									schema = @Schema(
+											type = "number"
+									)
+							)
+					)
+			}
+	)
+	public String getDogecoinFeeCeiling() {
+		Dogecoin dogecoin = Dogecoin.getInstance();
+
+		return String.valueOf(dogecoin.getFeeCeiling());
+	}
+
+	@POST
+	@Path("/updatefeeceiling")
+	@Operation(
+			summary = "Sets Dogecoin fee ceiling.",
+			description = "Sets Dogecoin fee ceiling.",
+			requestBody = @RequestBody(
+					required = true,
+					content = @Content(
+							mediaType = MediaType.TEXT_PLAIN,
+							schema = @Schema(
+									type = "number",
+									description = "the fee",
+									example = "100"
+							)
+					)
+			),
+			responses = {
+					@ApiResponse(
+							content = @Content(mediaType = MediaType.TEXT_PLAIN, schema = @Schema(type = "number", description = "fee"))
+					)
+			}
+	)
+	@ApiErrors({ApiError.INVALID_PRIVATE_KEY, ApiError.INVALID_CRITERIA})
+	public String setDogecoinFeeCeiling(@HeaderParam(Security.API_KEY_HEADER) String apiKey, String fee) {
+		Security.checkApiCallAllowed(request);
+
+		Dogecoin dogecoin = Dogecoin.getInstance();
+
+		try {
+			return CrossChainUtils.setFeeCeiling(dogecoin, fee);
+		}
+		catch (IllegalArgumentException e) {
+			throw ApiExceptionFactory.INSTANCE.createException(request, ApiError.INVALID_CRITERIA);
+		}
 	}
 }

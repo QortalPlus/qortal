@@ -9,16 +9,15 @@ import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.Transaction;
 import org.qortal.api.ApiError;
 import org.qortal.api.ApiErrors;
 import org.qortal.api.ApiExceptionFactory;
 import org.qortal.api.Security;
 import org.qortal.api.model.crosschain.AddressRequest;
-import org.qortal.api.model.crosschain.BitcoinSendRequest;
+import org.qortal.api.model.crosschain.DashSendRequest;
 import org.qortal.crosschain.AddressInfo;
-import org.qortal.crosschain.Bitcoin;
+import org.qortal.crosschain.Dash;
 import org.qortal.crosschain.ForeignBlockchainException;
 import org.qortal.crosschain.SimpleTransaction;
 import org.qortal.crosschain.ServerConfigurationInfo;
@@ -33,9 +32,9 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import java.util.List;
 
-@Path("/crosschain/btc")
-@Tag(name = "Cross-Chain (Bitcoin)")
-public class CrossChainBitcoinResource {
+@Path("/crosschain/dash")
+@Tag(name = "Cross-Chain (Dash)")
+public class CrossChainDashResource {
 
 	@Context
 	HttpServletRequest request;
@@ -43,8 +42,8 @@ public class CrossChainBitcoinResource {
 	@GET
 	@Path("/height")
 	@Operation(
-		summary = "Returns current Bitcoin block height",
-		description = "Returns the height of the most recent block in the Bitcoin chain.",
+		summary = "Returns current Dash block height",
+		description = "Returns the height of the most recent block in the Dash chain.",
 		responses = {
 			@ApiResponse(
 				content = @Content(
@@ -56,11 +55,11 @@ public class CrossChainBitcoinResource {
 		}
 	)
 	@ApiErrors({ApiError.FOREIGN_BLOCKCHAIN_NETWORK_ISSUE})
-	public String getBitcoinHeight() {
-		Bitcoin bitcoin = Bitcoin.getInstance();
+	public String getDashHeight() {
+		Dash dash = Dash.getInstance();
 
 		try {
-			Integer height = bitcoin.getBlockchainHeight();
+			Integer height = dash.getBlockchainHeight();
 			if (height == null)
 				throw ApiExceptionFactory.INSTANCE.createException(request, ApiError.FOREIGN_BLOCKCHAIN_NETWORK_ISSUE);
 
@@ -74,7 +73,7 @@ public class CrossChainBitcoinResource {
 	@POST
 	@Path("/walletbalance")
 	@Operation(
-		summary = "Returns BTC balance for hierarchical, deterministic BIP32 wallet",
+		summary = "Returns DASH balance for hierarchical, deterministic BIP32 wallet",
 		description = "Supply BIP32 'm' private/public key in base58, starting with 'xprv'/'xpub' for mainnet, 'tprv'/'tpub' for testnet",
 		requestBody = @RequestBody(
 			required = true,
@@ -95,16 +94,16 @@ public class CrossChainBitcoinResource {
 	)
 	@ApiErrors({ApiError.INVALID_PRIVATE_KEY, ApiError.FOREIGN_BLOCKCHAIN_NETWORK_ISSUE})
 	@SecurityRequirement(name = "apiKey")
-	public String getBitcoinWalletBalance(@HeaderParam(Security.API_KEY_HEADER) String apiKey, String key58) {
+	public String getDashWalletBalance(@HeaderParam(Security.API_KEY_HEADER) String apiKey, String key58) {
 		Security.checkApiCallAllowed(request);
 
-		Bitcoin bitcoin = Bitcoin.getInstance();
+		Dash dash = Dash.getInstance();
 
-		if (!bitcoin.isValidDeterministicKey(key58))
+		if (!dash.isValidDeterministicKey(key58))
 			throw ApiExceptionFactory.INSTANCE.createException(request, ApiError.INVALID_PRIVATE_KEY);
 
 		try {
-			Long balance = bitcoin.getWalletBalance(key58);
+			Long balance = dash.getWalletBalance(key58);
 			if (balance == null)
 				throw ApiExceptionFactory.INSTANCE.createException(request, ApiError.FOREIGN_BLOCKCHAIN_NETWORK_ISSUE);
 
@@ -139,16 +138,16 @@ public class CrossChainBitcoinResource {
 	)
 	@ApiErrors({ApiError.INVALID_PRIVATE_KEY, ApiError.FOREIGN_BLOCKCHAIN_NETWORK_ISSUE})
 	@SecurityRequirement(name = "apiKey")
-	public List<SimpleTransaction> getBitcoinWalletTransactions(@HeaderParam(Security.API_KEY_HEADER) String apiKey, String key58) {
+	public List<SimpleTransaction> getDashWalletTransactions(@HeaderParam(Security.API_KEY_HEADER) String apiKey, String key58) {
 		Security.checkApiCallAllowed(request);
 
-		Bitcoin bitcoin = Bitcoin.getInstance();
+		Dash dash = Dash.getInstance();
 
-		if (!bitcoin.isValidDeterministicKey(key58))
+		if (!dash.isValidDeterministicKey(key58))
 			throw ApiExceptionFactory.INSTANCE.createException(request, ApiError.INVALID_PRIVATE_KEY);
 
 		try {
-			return bitcoin.getWalletTransactions(key58);
+			return dash.getWalletTransactions(key58);
 		} catch (ForeignBlockchainException e) {
 			throw ApiExceptionFactory.INSTANCE.createException(request, ApiError.FOREIGN_BLOCKCHAIN_NETWORK_ISSUE);
 		}
@@ -177,16 +176,16 @@ public class CrossChainBitcoinResource {
 	)
 	@ApiErrors({ApiError.INVALID_PRIVATE_KEY, ApiError.FOREIGN_BLOCKCHAIN_NETWORK_ISSUE})
 	@SecurityRequirement(name = "apiKey")
-	public List<AddressInfo> getBitcoinAddressInfos(@HeaderParam(Security.API_KEY_HEADER) String apiKey, AddressRequest addressRequest) {
+	public List<AddressInfo> getDashAddressInfos(@HeaderParam(Security.API_KEY_HEADER) String apiKey, AddressRequest addressRequest) {
 		Security.checkApiCallAllowed(request);
 
-		Bitcoin bitcoin = Bitcoin.getInstance();
+		Dash dash = Dash.getInstance();
 
-		if (!bitcoin.isValidDeterministicKey(addressRequest.xpub58))
+		if (!dash.isValidDeterministicKey(addressRequest.xpub58))
 			throw ApiExceptionFactory.INSTANCE.createException(request, ApiError.INVALID_PRIVATE_KEY);
 
 		try {
-			return bitcoin.getWalletAddressInfos(addressRequest.xpub58);
+			return dash.getWalletAddressInfos(addressRequest.xpub58);
 		} catch (ForeignBlockchainException e) {
 			throw ApiExceptionFactory.INSTANCE.createException(request, ApiError.FOREIGN_BLOCKCHAIN_NETWORK_ISSUE);
 		}
@@ -195,14 +194,14 @@ public class CrossChainBitcoinResource {
 	@POST
 	@Path("/send")
 	@Operation(
-		summary = "Sends BTC from hierarchical, deterministic BIP32 wallet to specific address",
-		description = "Currently supports 'legacy' P2PKH Bitcoin addresses and Native SegWit (P2WPKH) addresses. Supply BIP32 'm' private key in base58, starting with 'xprv' for mainnet, 'tprv' for testnet",
+		summary = "Sends DASH from hierarchical, deterministic BIP32 wallet to specific address",
+		description = "Currently only supports 'legacy' P2PKH Dash addresses. Supply BIP32 'm' private key in base58, starting with 'xprv' for mainnet, 'tprv' for testnet",
 		requestBody = @RequestBody(
 			required = true,
 			content = @Content(
 				mediaType = MediaType.APPLICATION_JSON,
 				schema = @Schema(
-					implementation = BitcoinSendRequest.class
+					implementation = DashSendRequest.class
 				)
 			)
 		),
@@ -214,33 +213,33 @@ public class CrossChainBitcoinResource {
 	)
 	@ApiErrors({ApiError.INVALID_PRIVATE_KEY, ApiError.INVALID_CRITERIA, ApiError.INVALID_ADDRESS, ApiError.FOREIGN_BLOCKCHAIN_BALANCE_ISSUE, ApiError.FOREIGN_BLOCKCHAIN_NETWORK_ISSUE})
 	@SecurityRequirement(name = "apiKey")
-	public String sendBitcoin(@HeaderParam(Security.API_KEY_HEADER) String apiKey, BitcoinSendRequest bitcoinSendRequest) {
+	public String sendBitcoin(@HeaderParam(Security.API_KEY_HEADER) String apiKey, DashSendRequest dashSendRequest) {
 		Security.checkApiCallAllowed(request);
 
-		if (bitcoinSendRequest.bitcoinAmount <= 0)
+		if (dashSendRequest.dashAmount <= 0)
 			throw ApiExceptionFactory.INSTANCE.createException(request, ApiError.INVALID_CRITERIA);
 
-		if (bitcoinSendRequest.feePerByte != null && bitcoinSendRequest.feePerByte <= 0)
+		if (dashSendRequest.feePerByte != null && dashSendRequest.feePerByte <= 0)
 			throw ApiExceptionFactory.INSTANCE.createException(request, ApiError.INVALID_CRITERIA);
 
-		Bitcoin bitcoin = Bitcoin.getInstance();
+		Dash dash = Dash.getInstance();
 
-		if (!bitcoin.isValidAddress(bitcoinSendRequest.receivingAddress))
+		if (!dash.isValidAddress(dashSendRequest.receivingAddress))
 			throw ApiExceptionFactory.INSTANCE.createException(request, ApiError.INVALID_ADDRESS);
 
-		if (!bitcoin.isValidDeterministicKey(bitcoinSendRequest.xprv58))
+		if (!dash.isValidDeterministicKey(dashSendRequest.xprv58))
 			throw ApiExceptionFactory.INSTANCE.createException(request, ApiError.INVALID_PRIVATE_KEY);
 
-		Transaction spendTransaction = bitcoin.buildSpend(bitcoinSendRequest.xprv58,
-				bitcoinSendRequest.receivingAddress,
-				bitcoinSendRequest.bitcoinAmount,
-				bitcoinSendRequest.feePerByte);
+		Transaction spendTransaction = dash.buildSpend(dashSendRequest.xprv58,
+				dashSendRequest.receivingAddress,
+				dashSendRequest.dashAmount,
+				dashSendRequest.feePerByte);
 
 		if (spendTransaction == null)
 			throw ApiExceptionFactory.INSTANCE.createException(request, ApiError.FOREIGN_BLOCKCHAIN_BALANCE_ISSUE);
 
 		try {
-			bitcoin.broadcastTransaction(spendTransaction);
+			dash.broadcastTransaction(spendTransaction);
 		} catch (ForeignBlockchainException e) {
 			throw ApiExceptionFactory.INSTANCE.createException(request, ApiError.FOREIGN_BLOCKCHAIN_NETWORK_ISSUE);
 		}
@@ -251,8 +250,8 @@ public class CrossChainBitcoinResource {
 	@GET
 	@Path("/serverinfos")
 	@Operation(
-			summary = "Returns current Bitcoin server configuration",
-			description = "Returns current Bitcoin server locations and use status",
+			summary = "Returns current Dash server configuration",
+			description = "Returns current Dash server locations and use status",
 			responses = {
 					@ApiResponse(
 							content = @Content(
@@ -268,14 +267,14 @@ public class CrossChainBitcoinResource {
 		description = "Returns info for the currently connected server only"
 	) @QueryParam("current") Boolean current) {
 
-		return CrossChainUtils.buildServerConfigurationInfo(Bitcoin.getInstance(), current);
+		return CrossChainUtils.buildServerConfigurationInfo(Dash.getInstance(), current);
 	}
 
 	@GET
 	@Path("/feekb")
 	@Operation(
-			summary = "Returns Bitcoin fee per Kb.",
-			description = "Returns Bitcoin fee per Kb.",
+			summary = "Returns Dash fee per Kb.",
+			description = "Returns Dash fee per Kb.",
 			responses = {
 					@ApiResponse(
 							content = @Content(
@@ -286,17 +285,17 @@ public class CrossChainBitcoinResource {
 					)
 			}
 	)
-	public String getBitcoinFeePerKb() {
-		Bitcoin bitcoin = Bitcoin.getInstance();
+	public String getDashFeePerKb() {
+		Dash dash = Dash.getInstance();
 
-		return String.valueOf(bitcoin.getFeePerKb().value);
+		return String.valueOf(dash.getFeePerKb().value);
 	}
 
 	@POST
 	@Path("/updatefeekb")
 	@Operation(
-			summary = "Sets Bitcoin fee per Kb.",
-			description = "Sets Bitcoin fee per Kb.",
+			summary = "Sets Dash fee per Kb.",
+			description = "Sets Dash fee per Kb.",
 			requestBody = @RequestBody(
 					required = true,
 					content = @Content(
@@ -315,13 +314,13 @@ public class CrossChainBitcoinResource {
 			}
 	)
 	@ApiErrors({ApiError.INVALID_PRIVATE_KEY, ApiError.INVALID_CRITERIA})
-	public String setBitcoinFeePerKb(@HeaderParam(Security.API_KEY_HEADER) String apiKey, String fee) {
+	public String setDashFeePerKb(@HeaderParam(Security.API_KEY_HEADER) String apiKey, String fee) {
 		Security.checkApiCallAllowed(request);
 
-		Bitcoin bitcoin = Bitcoin.getInstance();
+		Dash dash = Dash.getInstance();
 
 		try {
-			return CrossChainUtils.setFeePerKb(bitcoin, fee);
+			return CrossChainUtils.setFeePerKb(dash, fee);
 		} catch (IllegalArgumentException e) {
 			throw ApiExceptionFactory.INSTANCE.createException(request, ApiError.INVALID_CRITERIA);
 		}
@@ -330,8 +329,8 @@ public class CrossChainBitcoinResource {
 	@GET
 	@Path("/feeceiling")
 	@Operation(
-			summary = "Returns Bitcoin fee per Kb.",
-			description = "Returns Bitcoin fee per Kb.",
+			summary = "Returns Dash fee per Kb.",
+			description = "Returns Dash fee per Kb.",
 			responses = {
 					@ApiResponse(
 							content = @Content(
@@ -342,17 +341,17 @@ public class CrossChainBitcoinResource {
 					)
 			}
 	)
-	public String getBitcoinFeeCeiling() {
-		Bitcoin bitcoin = Bitcoin.getInstance();
+	public String getDashFeeCeiling() {
+		Dash dash = Dash.getInstance();
 
-		return String.valueOf(bitcoin.getFeeCeiling());
+		return String.valueOf(dash.getFeeCeiling());
 	}
 
 	@POST
 	@Path("/updatefeeceiling")
 	@Operation(
-			summary = "Sets Bitcoin fee ceiling.",
-			description = "Sets Bitcoin fee ceiling.",
+			summary = "Sets Dash fee ceiling.",
+			description = "Sets Dash fee ceiling.",
 			requestBody = @RequestBody(
 					required = true,
 					content = @Content(
@@ -371,13 +370,13 @@ public class CrossChainBitcoinResource {
 			}
 	)
 	@ApiErrors({ApiError.INVALID_PRIVATE_KEY, ApiError.INVALID_CRITERIA})
-	public String setBitcoinFeeCeiling(@HeaderParam(Security.API_KEY_HEADER) String apiKey, String fee) {
+	public String setDashFeeCeiling(@HeaderParam(Security.API_KEY_HEADER) String apiKey, String fee) {
 		Security.checkApiCallAllowed(request);
 
-		Bitcoin bitcoin = Bitcoin.getInstance();
+		Dash dash = Dash.getInstance();
 
 		try {
-			return CrossChainUtils.setFeeCeiling(bitcoin, fee);
+			return CrossChainUtils.setFeeCeiling(dash, fee);
 		}
 		catch (IllegalArgumentException e) {
 			throw ApiExceptionFactory.INSTANCE.createException(request, ApiError.INVALID_CRITERIA);

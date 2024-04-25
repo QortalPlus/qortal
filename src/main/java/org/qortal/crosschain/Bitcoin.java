@@ -10,9 +10,11 @@ import org.qortal.crosschain.ElectrumX.Server;
 import org.qortal.crosschain.ChainableServer.ConnectionType;
 import org.qortal.settings.Settings;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.EnumMap;
+import java.util.List;
 import java.util.Map;
 
 public class Bitcoin extends Bitcoiny {
@@ -22,8 +24,6 @@ public class Bitcoin extends Bitcoiny {
 	private static final long MINIMUM_ORDER_AMOUNT = 100000; // 0.001 BTC minimum order, due to high fees
 
 	// Temporary values until a dynamic fee system is written.
-	private static final long OLD_FEE_AMOUNT = 4_000L; // Not 5000 so that existing P2SH-B can output 1000, avoiding dust issue, leaving 4000 for fees.
-	private static final long NEW_FEE_TIMESTAMP = 1598280000000L; // milliseconds since epoch
 	private static final long NEW_FEE_AMOUNT = 6_000L;
 
 	private static final long NON_MAINNET_FEE = 1000L; // enough for TESTNET3 and should be OK for REGTEST
@@ -43,7 +43,7 @@ public class Bitcoin extends Bitcoiny {
 
 			@Override
 			public Collection<ElectrumX.Server> getServers() {
-				return Arrays.asList(
+				List<ElectrumX.Server> defaultServers = Arrays.asList(
 					// Servers chosen on NO BASIS WHATSOEVER from various sources!
 					// Status verified at https://1209k.com/bitcoin-eye/ele.php?chain=btc
 					new Server("104.198.149.61", Server.ConnectionType.SSL, 50002),
@@ -54,27 +54,43 @@ public class Bitcoin extends Bitcoiny {
 					new Server("34.67.22.216", Server.ConnectionType.SSL, 50002),
 					new Server("34.68.133.78", Server.ConnectionType.SSL, 50002),
 					new Server("alviss.coinjoined.com", Server.ConnectionType.SSL, 50002),
+					new Server("api.ordimint.com", Server.ConnectionType.SSL, 50002),
+					new Server("ax101.blockeng.ch", Server.ConnectionType.SSL, 50002),
+					new Server("ax102.blockeng.ch", Server.ConnectionType.SSL, 50002),
 					new Server("b.1209k.com", Server.ConnectionType.SSL, 50002),
 					new Server("b6.1209k.com", Server.ConnectionType.SSL, 50002),
+					new Server("bitcoin.aranguren.org", Server.ConnectionType.SSL, 50002),
 					new Server("bitcoin.dermichi.com", Server.ConnectionType.SSL, 50002),
 					new Server("bitcoin.lu.ke", Server.ConnectionType.SSL, 50002),
 					new Server("bitcoin.lukechilds.co", Server.ConnectionType.SSL, 50002),
+					new Server("bitcoin.threshold.p2p.org", Server.ConnectionType.SSL, 50002),
 					new Server("blkhub.net", Server.ConnectionType.SSL, 50002),
+					new Server("bolt.schulzemic.net", Server.ConnectionType.SSL, 50002),
 					new Server("btc.aftrek.org", Server.ConnectionType.SSL, 50002),
+					new Server("btc.electrum.bitbitnet.net", Server.ConnectionType.SSL, 50002),
 					new Server("btc.hodler.ninja", Server.ConnectionType.SSL, 50002),
+					new Server("btc.lastingcoin.net", Server.ConnectionType.SSL, 50002),
 					new Server("btc.ocf.sh", Server.ConnectionType.SSL, 50002),
+					new Server("btc.prompt.cash", Server.ConnectionType.SSL, 63871),
 					new Server("btce.iiiiiii.biz", Server.ConnectionType.SSL, 50002),
 					new Server("caleb.vegas", Server.ConnectionType.SSL, 50002),
 					new Server("d762li0k0g.d.firewalla.org", Server.ConnectionType.SSL, 50002),
 					new Server("de.poiuty.com", Server.ConnectionType.SSL, 50002),
 					new Server("dijon.anties.org", Server.ConnectionType.SSL, 50002),
+					new Server("e.keff.org", Server.ConnectionType.SSL, 50002),
 					new Server("eai.coincited.net", Server.ConnectionType.SSL, 50002),
 					new Server("electrum.bitaroo.net", Server.ConnectionType.SSL, 50002),
 					new Server("electrum.bitrefill.com", Server.ConnectionType.SSL, 50002),
+					new Server("electrum.blockstream.info", Server.ConnectionType.SSL, 50002),
 					new Server("electrum.brainshome.de", Server.ConnectionType.SSL, 50002),
+					new Server("electrum.coineuskal.com", Server.ConnectionType.SSL, 50002),
+					new Server("electrum.coinext.com.br", Server.ConnectionType.SSL, 50002),
+					new Server("electrum.coinucopia.io", Server.ConnectionType.SSL, 50002),
 					new Server("electrum.emzy.de", Server.ConnectionType.SSL, 50002),
+					new Server("electrum.jochen-hoenicke.de", Server.ConnectionType.SSL, 50006),
 					new Server("electrum.kcicom.net", Server.ConnectionType.SSL, 50002),
 					new Server("electrum.kendigisland.xyz", Server.ConnectionType.SSL, 50002),
+					new Server("electrum.mmitech.info", Server.ConnectionType.SSL, 50002),
 					new Server("electrum.thomasfischbach.de", Server.ConnectionType.SSL, 50002),
 					new Server("electrum-btc.leblancnet.us", Server.ConnectionType.SSL, 50002),
 					new Server("electrum0.snel.it", Server.ConnectionType.SSL, 50002),
@@ -84,13 +100,21 @@ public class Bitcoin extends Bitcoiny {
 					new Server("electrumx.blockfinance-eco.li", Server.ConnectionType.SSL, 50002),
 					new Server("electrumx.indoor.app", Server.ConnectionType.SSL, 50002),
 					new Server("electrumx.iodata.org", Server.ConnectionType.SSL, 50002),
+					new Server("electrumx-btc.cryptonermal.net", Server.ConnectionType.SSL, 50002),
 					new Server("electrumx-core.1209k.com", Server.ConnectionType.SSL, 50002),
 					new Server("elx.bitske.com", Server.ConnectionType.SSL, 50002),
+					new Server("ex08.axalgo.com", Server.ConnectionType.SSL, 50002),
 					new Server("exs.dyshek.org", Server.ConnectionType.SSL, 50002),
 					new Server("fortress.qtornado.com", Server.ConnectionType.SSL, 50002),
+					new Server("fulcrum.grey.pw", Server.ConnectionType.SSL, 50002),
+					new Server("fulcrum.not.fyi", Server.ConnectionType.SSL, 51002),
+					new Server("fulcrum.sethforprivacy.com", Server.ConnectionType.SSL, 50002),
+					new Server("fulcrum.slicksparks.ky", Server.ConnectionType.SSL, 50002),
+					new Server("gods-of-rock.screaminglemur.net", Server.ConnectionType.SSL, 50002),
 					new Server("guichet.centure.cc", Server.ConnectionType.SSL, 50002),
 					new Server("hodl.artyomk13.me", Server.ConnectionType.SSL, 50002),
 					new Server("hodlers.beer", Server.ConnectionType.SSL, 50002),
+					new Server("horsey.cryptocowboys.net", Server.ConnectionType.SSL, 50002),
 					new Server("kareoke.qoppa.org", Server.ConnectionType.SSL, 50002),
 					new Server("kirsche.emzy.de", Server.ConnectionType.SSL, 50002),
 					new Server("kittyserver.ddnsfree.com", Server.ConnectionType.SSL, 50002),
@@ -100,10 +124,41 @@ public class Bitcoin extends Bitcoiny {
 					new Server("osr1ex1.compumundohipermegared.one", Server.ConnectionType.SSL, 50002),
 					new Server("paris.anties.org", Server.ConnectionType.SSL, 50002),
 					new Server("ragtor.duckdns.org", Server.ConnectionType.SSL, 50002),
+					new Server("smmalis37.ddns.net", Server.ConnectionType.SSL, 50002),
 					new Server("stavver.dyshek.org", Server.ConnectionType.SSL, 50002),
+					new Server("ulrichard.ch", Server.ConnectionType.SSL, 50002),
 					new Server("vmd63185.contaboserver.net", Server.ConnectionType.SSL, 50002),
 					new Server("xtrum.com", Server.ConnectionType.SSL, 50002)
 				);
+
+				List<ElectrumX.Server> availableServers = new ArrayList<>();
+				Boolean useDefault = Settings.getInstance().getUseBitcoinDefaults();
+				if (useDefault == true) {
+					availableServers.addAll(defaultServers);
+				}
+
+				String[] settingsList = Settings.getInstance().getBitcoinServers();
+				if (settingsList != null) {
+					List<ElectrumX.Server> customServers = new ArrayList<>();
+					for (String setting : settingsList) {
+						String[] colonParts = setting.split(":");
+						if (colonParts.length == 2) {
+							String[] commaParts = colonParts[1].split(",");
+							if (commaParts.length == 2) {
+								String hostname = colonParts[0];
+								int port = Integer.parseInt(commaParts[0].trim());
+								String typeString = commaParts[1].trim().toUpperCase();
+								Server.ConnectionType type = Server.ConnectionType.SSL;
+								if (typeString.equals("TCP")) {
+									type = Server.ConnectionType.TCP;
+								}
+								customServers.add(new Server(hostname, type, port));
+							}
+						}
+					}
+					availableServers.addAll(customServers);
+				}
+				return availableServers;
 			}
 
 			@Override
@@ -113,11 +168,7 @@ public class Bitcoin extends Bitcoiny {
 
 			@Override
 			public long getP2shFee(Long timestamp) {
-				// TODO: This will need to be replaced with something better in the near future!
-				if (timestamp != null && timestamp < NEW_FEE_TIMESTAMP)
-					return OLD_FEE_AMOUNT;
-
-				return NEW_FEE_AMOUNT;
+				return this.getFeeCeiling();
 			}
 		},
 		TEST3 {
@@ -179,6 +230,16 @@ public class Bitcoin extends Bitcoiny {
 			}
 		};
 
+		private long feeCeiling = NEW_FEE_AMOUNT;
+
+		public long getFeeCeiling() {
+			return feeCeiling;
+		}
+
+		public void setFeeCeiling(long feeCeiling) {
+			this.feeCeiling = feeCeiling;
+		}
+
 		public abstract NetworkParameters getParams();
 		public abstract Collection<ElectrumX.Server> getServers();
 		public abstract String getGenesisHash();
@@ -192,7 +253,7 @@ public class Bitcoin extends Bitcoiny {
 	// Constructors and instance
 
 	private Bitcoin(BitcoinNet bitcoinNet, BitcoinyBlockchainProvider blockchain, Context bitcoinjContext, String currencyCode) {
-		super(blockchain, bitcoinjContext, currencyCode);
+		super(blockchain, bitcoinjContext, currencyCode, bitcoinjContext.getFeePerKb());
 		this.bitcoinNet = bitcoinNet;
 
 		LOGGER.info(() -> String.format("Starting Bitcoin support using %s", this.bitcoinNet.name()));
@@ -237,6 +298,16 @@ public class Bitcoin extends Bitcoiny {
 		return this.bitcoinNet.getP2shFee(timestamp);
 	}
 
+	@Override
+	public long getFeeCeiling() {
+		return this.bitcoinNet.getFeeCeiling();
+	}
+
+	@Override
+	public void setFeeCeiling(long fee) {
+
+		this.bitcoinNet.setFeeCeiling( fee );
+	}
 	/**
  	* Returns bitcoinj transaction sending <tt>amount</tt> to <tt>recipient</tt> using 20 sat/byte fee.
  	*

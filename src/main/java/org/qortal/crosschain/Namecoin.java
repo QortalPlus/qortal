@@ -5,7 +5,7 @@ import org.bitcoinj.core.Context;
 import org.bitcoinj.core.NetworkParameters;
 import org.bitcoinj.params.RegTestParams;
 import org.bitcoinj.params.TestNet3Params;
-import org.libdohj.params.RavencoinMainNetParams;
+import org.libdohj.params.NamecoinMainNetParams;
 import org.qortal.crosschain.ElectrumX.Server;
 import org.qortal.crosschain.ChainableServer.ConnectionType;
 import org.qortal.settings.Settings;
@@ -17,17 +17,17 @@ import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
 
-public class Ravencoin extends Bitcoiny {
+public class Namecoin extends Bitcoiny {
 
-	public static final String CURRENCY_CODE = "RVN";
+	public static final String CURRENCY_CODE = "NMC";
 
-	private static final Coin DEFAULT_FEE_PER_KB = Coin.valueOf(1125000); // 0.01125 RVN per 1000 bytes
+	private static final Coin DEFAULT_FEE_PER_KB = Coin.valueOf(600000); // 0.006 NMC per 1000 bytes
 
-	private static final long MINIMUM_ORDER_AMOUNT = 1000000; // 0.01 RVN minimum order, to avoid dust errors
+	private static final long MINIMUM_ORDER_AMOUNT = 10000000L; // 0.1 NMC minimum order, to avoid dust errors
 
 	// Temporary values until a dynamic fee system is written.
-	private static final long MAINNET_FEE = 1000000L;
-	private static final long NON_MAINNET_FEE = 1000000L; // enough for TESTNET3 and should be OK for REGTEST
+	private static final long MAINNET_FEE = 200000L;
+	private static final long NON_MAINNET_FEE = 1000L; // enough for TESTNET3 and should be OK for REGTEST
 
 	private static final Map<ConnectionType, Integer> DEFAULT_ELECTRUMX_PORTS = new EnumMap<>(ConnectionType.class);
 	static {
@@ -35,33 +35,34 @@ public class Ravencoin extends Bitcoiny {
 		DEFAULT_ELECTRUMX_PORTS.put(ConnectionType.SSL, 50002);
 	}
 
-	public enum RavencoinNet {
+	public enum NamecoinNet {
 		MAIN {
 			@Override
 			public NetworkParameters getParams() {
-				return RavencoinMainNetParams.get();
+				return NamecoinMainNetParams.get();
 			}
 
 			@Override
 			public Collection<Server> getServers() {
 				List<ElectrumX.Server> defaultServers = Arrays.asList(
 					// Servers chosen on NO BASIS WHATSOEVER from various sources!
-					// Status verified at https://1209k.com/bitcoin-eye/ele.php?chain=rvn
-					// offline Server("electrum.qortal.link", Server.ConnectionType.SSL, 56002),
-					new Server("electrum1.cipig.net", Server.ConnectionType.SSL, 20051),
-					new Server("electrum2.cipig.net", Server.ConnectionType.SSL, 20051),
-					new Server("electrum3.cipig.net", Server.ConnectionType.SSL, 20051),
-					new Server("rvn-dashboard.com", Server.ConnectionType.SSL, 50002),
-					new Server("rvn4lyfe.com", Server.ConnectionType.SSL, 50002)
+					// Status verified at https://1209k.com/bitcoin-eye/ele.php?chain=nmc
+					new Server("162.212.154.52", Server.ConnectionType.SSL, 50002),
+					new Server("46.229.238.187", Server.ConnectionType.SSL, 57002),
+					new Server("electrumx1.nmc.dotbit.zone", Server.ConnectionType.SSL, 50002),
+					new Server("electrumx2.nmc.dotbit.zone", Server.ConnectionType.SSL, 50002),
+					new Server("electrumx3.nmc.dotbit.zone", Server.ConnectionType.SSL, 50002),
+					new Server("electrumx4.nmc.dotbit.zone", Server.ConnectionType.SSL, 50002),
+					new Server("nmc2.bitcoins.sk", Server.ConnectionType.SSL, 57002)
 				);
 
 				List<ElectrumX.Server> availableServers = new ArrayList<>();
-				Boolean useDefault = Settings.getInstance().getUseRavencoinDefaults();
+				Boolean useDefault = Settings.getInstance().getUseNamecoinDefaults();
 				if (useDefault == true) {
 					availableServers.addAll(defaultServers);
 				}
 
-				String[] settingsList = Settings.getInstance().getRavencoinServers();
+				String[] settingsList = Settings.getInstance().getNamecoinServers();
 				if (settingsList != null) {
 					List<ElectrumX.Server> customServers = new ArrayList<>();
 					for (String setting : settingsList) {
@@ -87,7 +88,7 @@ public class Ravencoin extends Bitcoiny {
 
 			@Override
 			public String getGenesisHash() {
-				return "0000006b444bc2f2ffe627be9d9e7e7a0730000870ef6eb6da46c8eae389df90";
+				return "000000000062b72c5e2ceb45fbc8587e807c155b0da735e6483dfba2f0a9c770";
 			}
 
 			@Override
@@ -108,7 +109,7 @@ public class Ravencoin extends Bitcoiny {
 
 			@Override
 			public String getGenesisHash() {
-				return "000000ecfc5e6324a079542221d00e10362bdc894d56500c414060eea8a3ad5a";
+				return "00000007199508e34a9ff81e6ec0c477a4cccff2a4767a8eee39c11db367b008";
 			}
 
 			@Override
@@ -158,27 +159,27 @@ public class Ravencoin extends Bitcoiny {
 		public abstract long getP2shFee(Long timestamp) throws ForeignBlockchainException;
 	}
 
-	private static Ravencoin instance;
+	private static Namecoin instance;
 
-	private final RavencoinNet ravencoinNet;
+	private final NamecoinNet namecoinNet;
 
 	// Constructors and instance
 
-	private Ravencoin(RavencoinNet ravencoinNet, BitcoinyBlockchainProvider blockchain, Context bitcoinjContext, String currencyCode) {
+	private Namecoin(NamecoinNet namecoinNet, BitcoinyBlockchainProvider blockchain, Context bitcoinjContext, String currencyCode) {
 		super(blockchain, bitcoinjContext, currencyCode, DEFAULT_FEE_PER_KB);
-		this.ravencoinNet = ravencoinNet;
+		this.namecoinNet = namecoinNet;
 
-		LOGGER.info(() -> String.format("Starting Ravencoin support using %s", this.ravencoinNet.name()));
+		LOGGER.info(() -> String.format("Starting Namecoin support using %s", this.namecoinNet.name()));
 	}
 
-	public static synchronized Ravencoin getInstance() {
+	public static synchronized Namecoin getInstance() {
 		if (instance == null) {
-			RavencoinNet ravencoinNet = Settings.getInstance().getRavencoinNet();
+			NamecoinNet namecoinNet = Settings.getInstance().getNamecoinNet();
 
-			BitcoinyBlockchainProvider electrumX = new ElectrumX("Ravencoin-" + ravencoinNet.name(), ravencoinNet.getGenesisHash(), ravencoinNet.getServers(), DEFAULT_ELECTRUMX_PORTS);
-			Context bitcoinjContext = new Context(ravencoinNet.getParams());
+			BitcoinyBlockchainProvider electrumX = new ElectrumX("Namecoin-" + namecoinNet.name(), namecoinNet.getGenesisHash(), namecoinNet.getServers(), DEFAULT_ELECTRUMX_PORTS);
+			Context bitcoinjContext = new Context(namecoinNet.getParams());
 
-			instance = new Ravencoin(ravencoinNet, electrumX, bitcoinjContext, CURRENCY_CODE);
+			instance = new Namecoin(namecoinNet, electrumX, bitcoinjContext, CURRENCY_CODE);
 
 			electrumX.setBlockchain(instance);
 		}
@@ -200,24 +201,24 @@ public class Ravencoin extends Bitcoiny {
 	}
 
 	/**
-	 * Returns estimated RVN fee, in sats per 1000bytes, optionally for historic timestamp.
+	 * Returns estimated NMC fee, in sats per 1000bytes, optionally for historic timestamp.
 	 * 
 	 * @param timestamp optional milliseconds since epoch, or null for 'now'
 	 * @return sats per 1000bytes, or throws ForeignBlockchainException if something went wrong
 	 */
 	@Override
 	public long getP2shFee(Long timestamp) throws ForeignBlockchainException {
-		return this.ravencoinNet.getP2shFee(timestamp);
+		return this.namecoinNet.getP2shFee(timestamp);
 	}
 
 	@Override
 	public long getFeeCeiling() {
-		return this.ravencoinNet.getFeeCeiling();
+		return this.namecoinNet.getFeeCeiling();
 	}
 
 	@Override
 	public void setFeeCeiling(long fee) {
 
-		this.ravencoinNet.setFeeCeiling( fee );
+		this.namecoinNet.setFeeCeiling( fee );
 	}
 }

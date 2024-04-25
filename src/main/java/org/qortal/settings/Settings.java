@@ -13,6 +13,9 @@ import org.qortal.crosschain.Dogecoin.DogecoinNet;
 import org.qortal.crosschain.Litecoin.LitecoinNet;
 import org.qortal.crosschain.PirateChain.PirateChainNet;
 import org.qortal.crosschain.Ravencoin.RavencoinNet;
+import org.qortal.crosschain.Namecoin.NamecoinNet;
+import org.qortal.crosschain.Dash.DashNet;
+import org.qortal.crosschain.Firo.FiroNet;
 import org.qortal.network.message.MessageType;
 import org.qortal.utils.EnumUtils;
 
@@ -241,6 +244,32 @@ public class Settings {
 	private DigibyteNet digibyteNet = DigibyteNet.MAIN;
 	private RavencoinNet ravencoinNet = RavencoinNet.MAIN;
 	private PirateChainNet pirateChainNet = PirateChainNet.MAIN;
+	private NamecoinNet namecoinNet = NamecoinNet.MAIN;
+	private DashNet dashNet = DashNet.MAIN;
+	private FiroNet firoNet = FiroNet.MAIN;
+
+	// List of ElectrumX servers to attempt connections with
+	private String[] bitcoinServers = null;
+	private String[] litecoinServers = null;
+	private String[] dogecoinServers = null;
+	private String[] digibyteServers = null;
+	private String[] ravencoinServers = null;
+	private String[] pirateChainServers = null;
+	private String[] namecoinServers = null;
+	private String[] dashServers = null;
+	private String[] firoServers = null;
+
+	// Whether to connect with the default ElectrumX servers
+	private Boolean useBitcoinDefaults = true;
+	private Boolean useLitecoinDefaults = true;
+	private Boolean useDogecoinDefaults = true;
+	private Boolean useDigibyteDefaults = true;
+	private Boolean useRavencoinDefaults = true;
+	private Boolean usePirateChainDefaults = true;
+	private Boolean useNamecoinDefaults = true;
+	private Boolean useDashDefaults = true;
+	private Boolean useFiroDefaults = true;
+
 	// Also crosschain-related:
 	/** Whether to show SysTray pop-up notifications when trade-bot entries change state */
 	private boolean tradebotSystrayEnabled = false;
@@ -366,6 +395,9 @@ public class Settings {
 
 	/** Whether to serve QDN data without authentication */
 	private boolean qdnAuthBypassEnabled = true;
+
+	/** Whether to accept CHAT transactions without authentication */
+	private boolean chatAuthBypassEnabled = false;
 
 	/** Limit threads per message type */
 	private Set<ThreadLimit> maxThreadsPerMessageType = new HashSet<>();
@@ -836,25 +868,85 @@ public class Settings {
 	public BitcoinNet getBitcoinNet() {
 		return this.bitcoinNet;
 	}
-
 	public LitecoinNet getLitecoinNet() {
 		return this.litecoinNet;
 	}
-
 	public DogecoinNet getDogecoinNet() {
 		return this.dogecoinNet;
 	}
-
 	public DigibyteNet getDigibyteNet() {
 		return this.digibyteNet;
 	}
-
 	public RavencoinNet getRavencoinNet() {
 		return this.ravencoinNet;
 	}
-
 	public PirateChainNet getPirateChainNet() {
 		return this.pirateChainNet;
+	}
+	public NamecoinNet getNamecoinNet() {
+		return this.namecoinNet;
+	}
+	public DashNet getDashNet() {
+		return this.dashNet;
+	}
+	public FiroNet getFiroNet() {
+		return this.firoNet;
+	}
+
+	public String[] getBitcoinServers() {
+		return this.bitcoinServers;
+	}
+	public String[] getLitecoinServers() {
+		return this.litecoinServers;
+	}
+	public String[] getDogecoinServers() {
+		return this.dogecoinServers;
+	}
+	public String[] getDigibyteServers() {
+		return this.digibyteServers;
+	}
+	public String[] getRavencoinServers() {
+		return this.ravencoinServers;
+	}
+	public String[] getPirateChainServers() {
+		return this.pirateChainServers;
+	}
+	public String[] getNamecoinServers() {
+		return this.namecoinServers;
+	}
+	public String[] getDashServers() {
+		return this.dashServers;
+	}
+	public String[] getFiroServers() {
+		return this.firoServers;
+	}
+
+	public Boolean getUseBitcoinDefaults() {
+		return this.useBitcoinDefaults;
+	}
+	public Boolean getUseLitecoinDefaults() {
+		return this.useLitecoinDefaults;
+	}
+	public Boolean getUseDogecoinDefaults() {
+		return this.useDogecoinDefaults;
+	}
+	public Boolean getUseDigibyteDefaults() {
+		return this.useDigibyteDefaults;
+	}
+	public Boolean getUseRavencoinDefaults() {
+		return this.useRavencoinDefaults;
+	}
+	public Boolean getUsePirateChainDefaults() {
+		return this.usePirateChainDefaults;
+	}
+	public Boolean getUseNamecoinDefaults() {
+		return this.useNamecoinDefaults;
+	}
+	public Boolean getUseDashDefaults() {
+		return this.useDashDefaults;
+	}
+	public Boolean getUseFiroDefaults() {
+		return this.useFiroDefaults;
 	}
 
 	public int getMaxTradeOfferAttempts() {
@@ -1108,6 +1200,10 @@ public class Settings {
 			return true;
 		}
 		return this.qdnAuthBypassEnabled;
+	}
+
+	public boolean isChatAuthBypassEnabled() {
+		return this.chatAuthBypassEnabled;
 	}
 
 	public Integer getMaxThreadsForMessageType(MessageType messageType) {

@@ -49,7 +49,7 @@ public class PirateChain extends Bitcoiny {
 
 			@Override
 			public Collection<Server> getServers() {
-				return Arrays.asList(
+				List<Server> defaultServers = Arrays.asList(
 					// Servers chosen on NO BASIS WHATSOEVER from various sources!
 					new Server("lightd.pirate.black", Server.ConnectionType.SSL, 443),
 					new Server("wallet-arrr1.qortal.online", Server.ConnectionType.SSL, 443),
@@ -58,6 +58,35 @@ public class PirateChain extends Bitcoiny {
 					new Server("wallet-arrr4.qortal.online", Server.ConnectionType.SSL, 443),
 					new Server("wallet-arrr5.qortal.online", Server.ConnectionType.SSL, 443)
 				);
+
+				List<Server> availableServers = new ArrayList<>();
+				Boolean useDefault = Settings.getInstance().getUsePirateChainDefaults();
+				if (useDefault == true) {
+					availableServers.addAll(defaultServers);
+				}
+
+				String[] settingsList = Settings.getInstance().getPirateChainServers();
+				if (settingsList != null) {
+					List<Server> customServers = new ArrayList<>();
+					for (String setting : settingsList) {
+						String[] colonParts = setting.split(":");
+						if (colonParts.length == 2) {
+							String[] commaParts = colonParts[1].split(",");
+							if (commaParts.length == 2) {
+								String hostname = colonParts[0];
+								int port = Integer.parseInt(commaParts[0].trim());
+								String typeString = commaParts[1].trim().toUpperCase();
+								Server.ConnectionType type = Server.ConnectionType.SSL;
+								if (typeString.equals("TCP")) {
+									type = Server.ConnectionType.TCP;
+								}
+								customServers.add(new Server(hostname, type, port));
+							}
+						}
+					}
+					availableServers.addAll(customServers);
+				}
+				return availableServers;
 			}
 
 			@Override
@@ -67,8 +96,7 @@ public class PirateChain extends Bitcoiny {
 
 			@Override
 			public long getP2shFee(Long timestamp) {
-				// TODO: This will need to be replaced with something better in the near future!
-				return MAINNET_FEE;
+				return this.getFeeCeiling();
 			}
 		},
 		TEST3 {
@@ -118,6 +146,16 @@ public class PirateChain extends Bitcoiny {
 			}
 		};
 
+		private long feeCeiling = MAINNET_FEE;
+
+		public long getFeeCeiling() {
+			return feeCeiling;
+		}
+
+		public void setFeeCeiling(long feeCeiling) {
+			this.feeCeiling = feeCeiling;
+		}
+
 		public abstract NetworkParameters getParams();
 		public abstract Collection<Server> getServers();
 		public abstract String getGenesisHash();
@@ -131,7 +169,7 @@ public class PirateChain extends Bitcoiny {
 	// Constructors and instance
 
 	private PirateChain(PirateChainNet pirateChainNet, BitcoinyBlockchainProvider blockchain, Context bitcoinjContext, String currencyCode) {
-		super(blockchain, bitcoinjContext, currencyCode);
+		super(blockchain, bitcoinjContext, currencyCode, DEFAULT_FEE_PER_KB);
 		this.pirateChainNet = pirateChainNet;
 
 		LOGGER.info(() -> String.format("Starting Pirate Chain support using %s", this.pirateChainNet.name()));
@@ -160,12 +198,6 @@ public class PirateChain extends Bitcoiny {
 
 	// Actual useful methods for use by other classes
 
-	/** Default Litecoin fee is lower than Bitcoin: only 10sats/byte. */
-	@Override
-	public Coin getFeePerKb() {
-		return DEFAULT_FEE_PER_KB;
-	}
-
 	@Override
 	public long getMinimumOrderAmount() {
 		return MINIMUM_ORDER_AMOUNT;
@@ -182,6 +214,16 @@ public class PirateChain extends Bitcoiny {
 		return this.pirateChainNet.getP2shFee(timestamp);
 	}
 
+	@Override
+	public long getFeeCeiling() {
+		return this.pirateChainNet.getFeeCeiling();
+	}
+
+	@Override
+	public void setFeeCeiling(long fee) {
+
+		this.pirateChainNet.setFeeCeiling( fee );
+	}
 	/**
 	 * Returns confirmed balance, based on passed payment script.
 	 * <p>

@@ -9,16 +9,16 @@ import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.Transaction;
 import org.qortal.api.ApiError;
 import org.qortal.api.ApiErrors;
 import org.qortal.api.ApiExceptionFactory;
 import org.qortal.api.Security;
 import org.qortal.api.model.crosschain.AddressRequest;
-import org.qortal.api.model.crosschain.BitcoinSendRequest;
+import org.qortal.api.model.crosschain.NamecoinSendRequest;
 import org.qortal.crosschain.AddressInfo;
-import org.qortal.crosschain.Bitcoin;
+import org.qortal.crosschain.Firo;
+import org.qortal.crosschain.Namecoin;
 import org.qortal.crosschain.ForeignBlockchainException;
 import org.qortal.crosschain.SimpleTransaction;
 import org.qortal.crosschain.ServerConfigurationInfo;
@@ -33,9 +33,9 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import java.util.List;
 
-@Path("/crosschain/btc")
-@Tag(name = "Cross-Chain (Bitcoin)")
-public class CrossChainBitcoinResource {
+@Path("/crosschain/nmc")
+@Tag(name = "Cross-Chain (Namecoin)")
+public class CrossChainNamecoinResource {
 
 	@Context
 	HttpServletRequest request;
@@ -43,8 +43,8 @@ public class CrossChainBitcoinResource {
 	@GET
 	@Path("/height")
 	@Operation(
-		summary = "Returns current Bitcoin block height",
-		description = "Returns the height of the most recent block in the Bitcoin chain.",
+		summary = "Returns current Namecoin block height",
+		description = "Returns the height of the most recent block in the Namecoin chain.",
 		responses = {
 			@ApiResponse(
 				content = @Content(
@@ -56,11 +56,11 @@ public class CrossChainBitcoinResource {
 		}
 	)
 	@ApiErrors({ApiError.FOREIGN_BLOCKCHAIN_NETWORK_ISSUE})
-	public String getBitcoinHeight() {
-		Bitcoin bitcoin = Bitcoin.getInstance();
+	public String getNamecoinHeight() {
+		Namecoin namecoin = Namecoin.getInstance();
 
 		try {
-			Integer height = bitcoin.getBlockchainHeight();
+			Integer height = namecoin.getBlockchainHeight();
 			if (height == null)
 				throw ApiExceptionFactory.INSTANCE.createException(request, ApiError.FOREIGN_BLOCKCHAIN_NETWORK_ISSUE);
 
@@ -74,7 +74,7 @@ public class CrossChainBitcoinResource {
 	@POST
 	@Path("/walletbalance")
 	@Operation(
-		summary = "Returns BTC balance for hierarchical, deterministic BIP32 wallet",
+		summary = "Returns NMC balance for hierarchical, deterministic BIP32 wallet",
 		description = "Supply BIP32 'm' private/public key in base58, starting with 'xprv'/'xpub' for mainnet, 'tprv'/'tpub' for testnet",
 		requestBody = @RequestBody(
 			required = true,
@@ -95,16 +95,16 @@ public class CrossChainBitcoinResource {
 	)
 	@ApiErrors({ApiError.INVALID_PRIVATE_KEY, ApiError.FOREIGN_BLOCKCHAIN_NETWORK_ISSUE})
 	@SecurityRequirement(name = "apiKey")
-	public String getBitcoinWalletBalance(@HeaderParam(Security.API_KEY_HEADER) String apiKey, String key58) {
+	public String getNamecoinWalletBalance(@HeaderParam(Security.API_KEY_HEADER) String apiKey, String key58) {
 		Security.checkApiCallAllowed(request);
 
-		Bitcoin bitcoin = Bitcoin.getInstance();
+		Namecoin namecoin = Namecoin.getInstance();
 
-		if (!bitcoin.isValidDeterministicKey(key58))
+		if (!namecoin.isValidDeterministicKey(key58))
 			throw ApiExceptionFactory.INSTANCE.createException(request, ApiError.INVALID_PRIVATE_KEY);
 
 		try {
-			Long balance = bitcoin.getWalletBalance(key58);
+			Long balance = namecoin.getWalletBalance(key58);
 			if (balance == null)
 				throw ApiExceptionFactory.INSTANCE.createException(request, ApiError.FOREIGN_BLOCKCHAIN_NETWORK_ISSUE);
 
@@ -139,16 +139,16 @@ public class CrossChainBitcoinResource {
 	)
 	@ApiErrors({ApiError.INVALID_PRIVATE_KEY, ApiError.FOREIGN_BLOCKCHAIN_NETWORK_ISSUE})
 	@SecurityRequirement(name = "apiKey")
-	public List<SimpleTransaction> getBitcoinWalletTransactions(@HeaderParam(Security.API_KEY_HEADER) String apiKey, String key58) {
+	public List<SimpleTransaction> getNamecoinWalletTransactions(@HeaderParam(Security.API_KEY_HEADER) String apiKey, String key58) {
 		Security.checkApiCallAllowed(request);
 
-		Bitcoin bitcoin = Bitcoin.getInstance();
+		Namecoin namecoin = Namecoin.getInstance();
 
-		if (!bitcoin.isValidDeterministicKey(key58))
+		if (!namecoin.isValidDeterministicKey(key58))
 			throw ApiExceptionFactory.INSTANCE.createException(request, ApiError.INVALID_PRIVATE_KEY);
 
 		try {
-			return bitcoin.getWalletTransactions(key58);
+			return namecoin.getWalletTransactions(key58);
 		} catch (ForeignBlockchainException e) {
 			throw ApiExceptionFactory.INSTANCE.createException(request, ApiError.FOREIGN_BLOCKCHAIN_NETWORK_ISSUE);
 		}
@@ -177,16 +177,16 @@ public class CrossChainBitcoinResource {
 	)
 	@ApiErrors({ApiError.INVALID_PRIVATE_KEY, ApiError.FOREIGN_BLOCKCHAIN_NETWORK_ISSUE})
 	@SecurityRequirement(name = "apiKey")
-	public List<AddressInfo> getBitcoinAddressInfos(@HeaderParam(Security.API_KEY_HEADER) String apiKey, AddressRequest addressRequest) {
+	public List<AddressInfo> getNamecoinAddressInfos(@HeaderParam(Security.API_KEY_HEADER) String apiKey, AddressRequest addressRequest) {
 		Security.checkApiCallAllowed(request);
 
-		Bitcoin bitcoin = Bitcoin.getInstance();
+		Namecoin namecoin = Namecoin.getInstance();
 
-		if (!bitcoin.isValidDeterministicKey(addressRequest.xpub58))
+		if (!namecoin.isValidDeterministicKey(addressRequest.xpub58))
 			throw ApiExceptionFactory.INSTANCE.createException(request, ApiError.INVALID_PRIVATE_KEY);
 
 		try {
-			return bitcoin.getWalletAddressInfos(addressRequest.xpub58);
+			return namecoin.getWalletAddressInfos(addressRequest.xpub58);
 		} catch (ForeignBlockchainException e) {
 			throw ApiExceptionFactory.INSTANCE.createException(request, ApiError.FOREIGN_BLOCKCHAIN_NETWORK_ISSUE);
 		}
@@ -195,14 +195,14 @@ public class CrossChainBitcoinResource {
 	@POST
 	@Path("/send")
 	@Operation(
-		summary = "Sends BTC from hierarchical, deterministic BIP32 wallet to specific address",
-		description = "Currently supports 'legacy' P2PKH Bitcoin addresses and Native SegWit (P2WPKH) addresses. Supply BIP32 'm' private key in base58, starting with 'xprv' for mainnet, 'tprv' for testnet",
+		summary = "Sends NMC from hierarchical, deterministic BIP32 wallet to specific address",
+		description = "Currently only supports 'legacy' P2PKH Namecoin addresses. Supply BIP32 'm' private key in base58, starting with 'xprv' for mainnet, 'tprv' for testnet",
 		requestBody = @RequestBody(
 			required = true,
 			content = @Content(
 				mediaType = MediaType.APPLICATION_JSON,
 				schema = @Schema(
-					implementation = BitcoinSendRequest.class
+					implementation = NamecoinSendRequest.class
 				)
 			)
 		),
@@ -214,33 +214,33 @@ public class CrossChainBitcoinResource {
 	)
 	@ApiErrors({ApiError.INVALID_PRIVATE_KEY, ApiError.INVALID_CRITERIA, ApiError.INVALID_ADDRESS, ApiError.FOREIGN_BLOCKCHAIN_BALANCE_ISSUE, ApiError.FOREIGN_BLOCKCHAIN_NETWORK_ISSUE})
 	@SecurityRequirement(name = "apiKey")
-	public String sendBitcoin(@HeaderParam(Security.API_KEY_HEADER) String apiKey, BitcoinSendRequest bitcoinSendRequest) {
+	public String sendBitcoin(@HeaderParam(Security.API_KEY_HEADER) String apiKey, NamecoinSendRequest namecoinSendRequest) {
 		Security.checkApiCallAllowed(request);
 
-		if (bitcoinSendRequest.bitcoinAmount <= 0)
+		if (namecoinSendRequest.namecoinAmount <= 0)
 			throw ApiExceptionFactory.INSTANCE.createException(request, ApiError.INVALID_CRITERIA);
 
-		if (bitcoinSendRequest.feePerByte != null && bitcoinSendRequest.feePerByte <= 0)
+		if (namecoinSendRequest.feePerByte != null && namecoinSendRequest.feePerByte <= 0)
 			throw ApiExceptionFactory.INSTANCE.createException(request, ApiError.INVALID_CRITERIA);
 
-		Bitcoin bitcoin = Bitcoin.getInstance();
+		Namecoin namecoin = Namecoin.getInstance();
 
-		if (!bitcoin.isValidAddress(bitcoinSendRequest.receivingAddress))
+		if (!namecoin.isValidAddress(namecoinSendRequest.receivingAddress))
 			throw ApiExceptionFactory.INSTANCE.createException(request, ApiError.INVALID_ADDRESS);
 
-		if (!bitcoin.isValidDeterministicKey(bitcoinSendRequest.xprv58))
+		if (!namecoin.isValidDeterministicKey(namecoinSendRequest.xprv58))
 			throw ApiExceptionFactory.INSTANCE.createException(request, ApiError.INVALID_PRIVATE_KEY);
 
-		Transaction spendTransaction = bitcoin.buildSpend(bitcoinSendRequest.xprv58,
-				bitcoinSendRequest.receivingAddress,
-				bitcoinSendRequest.bitcoinAmount,
-				bitcoinSendRequest.feePerByte);
+		Transaction spendTransaction = namecoin.buildSpend(namecoinSendRequest.xprv58,
+				namecoinSendRequest.receivingAddress,
+				namecoinSendRequest.namecoinAmount,
+				namecoinSendRequest.feePerByte);
 
 		if (spendTransaction == null)
 			throw ApiExceptionFactory.INSTANCE.createException(request, ApiError.FOREIGN_BLOCKCHAIN_BALANCE_ISSUE);
 
 		try {
-			bitcoin.broadcastTransaction(spendTransaction);
+			namecoin.broadcastTransaction(spendTransaction);
 		} catch (ForeignBlockchainException e) {
 			throw ApiExceptionFactory.INSTANCE.createException(request, ApiError.FOREIGN_BLOCKCHAIN_NETWORK_ISSUE);
 		}
@@ -251,8 +251,8 @@ public class CrossChainBitcoinResource {
 	@GET
 	@Path("/serverinfos")
 	@Operation(
-			summary = "Returns current Bitcoin server configuration",
-			description = "Returns current Bitcoin server locations and use status",
+			summary = "Returns current Namecoin server configuration",
+			description = "Returns current Namecoin server locations and use status",
 			responses = {
 					@ApiResponse(
 							content = @Content(
@@ -268,14 +268,14 @@ public class CrossChainBitcoinResource {
 		description = "Returns info for the currently connected server only"
 	) @QueryParam("current") Boolean current) {
 
-		return CrossChainUtils.buildServerConfigurationInfo(Bitcoin.getInstance(), current);
+		return CrossChainUtils.buildServerConfigurationInfo(Namecoin.getInstance(), current);
 	}
 
 	@GET
 	@Path("/feekb")
 	@Operation(
-			summary = "Returns Bitcoin fee per Kb.",
-			description = "Returns Bitcoin fee per Kb.",
+			summary = "Returns Namecoin fee per Kb.",
+			description = "Returns Namecoin fee per Kb.",
 			responses = {
 					@ApiResponse(
 							content = @Content(
@@ -286,17 +286,17 @@ public class CrossChainBitcoinResource {
 					)
 			}
 	)
-	public String getBitcoinFeePerKb() {
-		Bitcoin bitcoin = Bitcoin.getInstance();
+	public String getNamecoinFeePerKb() {
+		Namecoin namecoin = Namecoin.getInstance();
 
-		return String.valueOf(bitcoin.getFeePerKb().value);
+		return String.valueOf(namecoin.getFeePerKb().value);
 	}
 
 	@POST
 	@Path("/updatefeekb")
 	@Operation(
-			summary = "Sets Bitcoin fee per Kb.",
-			description = "Sets Bitcoin fee per Kb.",
+			summary = "Sets Namecoin fee per Kb.",
+			description = "Sets Namecoin fee per Kb.",
 			requestBody = @RequestBody(
 					required = true,
 					content = @Content(
@@ -315,13 +315,13 @@ public class CrossChainBitcoinResource {
 			}
 	)
 	@ApiErrors({ApiError.INVALID_PRIVATE_KEY, ApiError.INVALID_CRITERIA})
-	public String setBitcoinFeePerKb(@HeaderParam(Security.API_KEY_HEADER) String apiKey, String fee) {
+	public String setNamecoinFeePerKb(@HeaderParam(Security.API_KEY_HEADER) String apiKey, String fee) {
 		Security.checkApiCallAllowed(request);
 
-		Bitcoin bitcoin = Bitcoin.getInstance();
+		Namecoin namecoin = Namecoin.getInstance();
 
 		try {
-			return CrossChainUtils.setFeePerKb(bitcoin, fee);
+			return CrossChainUtils.setFeePerKb(namecoin, fee);
 		} catch (IllegalArgumentException e) {
 			throw ApiExceptionFactory.INSTANCE.createException(request, ApiError.INVALID_CRITERIA);
 		}
@@ -330,8 +330,8 @@ public class CrossChainBitcoinResource {
 	@GET
 	@Path("/feeceiling")
 	@Operation(
-			summary = "Returns Bitcoin fee per Kb.",
-			description = "Returns Bitcoin fee per Kb.",
+			summary = "Returns Namecoin fee per Kb.",
+			description = "Returns Namecoin fee per Kb.",
 			responses = {
 					@ApiResponse(
 							content = @Content(
@@ -342,17 +342,17 @@ public class CrossChainBitcoinResource {
 					)
 			}
 	)
-	public String getBitcoinFeeCeiling() {
-		Bitcoin bitcoin = Bitcoin.getInstance();
+	public String getNamecoinFeeCeiling() {
+		Namecoin namecoin = Namecoin.getInstance();
 
-		return String.valueOf(bitcoin.getFeeCeiling());
+		return String.valueOf(namecoin.getFeeCeiling());
 	}
 
 	@POST
 	@Path("/updatefeeceiling")
 	@Operation(
-			summary = "Sets Bitcoin fee ceiling.",
-			description = "Sets Bitcoin fee ceiling.",
+			summary = "Sets Namecoin fee ceiling.",
+			description = "Sets Namecoin fee ceiling.",
 			requestBody = @RequestBody(
 					required = true,
 					content = @Content(
@@ -371,13 +371,13 @@ public class CrossChainBitcoinResource {
 			}
 	)
 	@ApiErrors({ApiError.INVALID_PRIVATE_KEY, ApiError.INVALID_CRITERIA})
-	public String setBitcoinFeeCeiling(@HeaderParam(Security.API_KEY_HEADER) String apiKey, String fee) {
+	public String setNamecoinFeeCeiling(@HeaderParam(Security.API_KEY_HEADER) String apiKey, String fee) {
 		Security.checkApiCallAllowed(request);
 
-		Bitcoin bitcoin = Bitcoin.getInstance();
+		Namecoin namecoin = Namecoin.getInstance();
 
 		try {
-			return CrossChainUtils.setFeeCeiling(bitcoin, fee);
+			return CrossChainUtils.setFeeCeiling(namecoin, fee);
 		}
 		catch (IllegalArgumentException e) {
 			throw ApiExceptionFactory.INSTANCE.createException(request, ApiError.INVALID_CRITERIA);

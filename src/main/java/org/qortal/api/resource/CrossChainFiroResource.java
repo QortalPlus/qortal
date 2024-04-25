@@ -9,16 +9,15 @@ import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.Transaction;
 import org.qortal.api.ApiError;
 import org.qortal.api.ApiErrors;
 import org.qortal.api.ApiExceptionFactory;
 import org.qortal.api.Security;
 import org.qortal.api.model.crosschain.AddressRequest;
-import org.qortal.api.model.crosschain.BitcoinSendRequest;
+import org.qortal.api.model.crosschain.FiroSendRequest;
 import org.qortal.crosschain.AddressInfo;
-import org.qortal.crosschain.Bitcoin;
+import org.qortal.crosschain.Firo;
 import org.qortal.crosschain.ForeignBlockchainException;
 import org.qortal.crosschain.SimpleTransaction;
 import org.qortal.crosschain.ServerConfigurationInfo;
@@ -33,9 +32,9 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import java.util.List;
 
-@Path("/crosschain/btc")
-@Tag(name = "Cross-Chain (Bitcoin)")
-public class CrossChainBitcoinResource {
+@Path("/crosschain/firo")
+@Tag(name = "Cross-Chain (Firo)")
+public class CrossChainFiroResource {
 
 	@Context
 	HttpServletRequest request;
@@ -43,8 +42,8 @@ public class CrossChainBitcoinResource {
 	@GET
 	@Path("/height")
 	@Operation(
-		summary = "Returns current Bitcoin block height",
-		description = "Returns the height of the most recent block in the Bitcoin chain.",
+		summary = "Returns current Firo block height",
+		description = "Returns the height of the most recent block in the Firo chain.",
 		responses = {
 			@ApiResponse(
 				content = @Content(
@@ -56,11 +55,11 @@ public class CrossChainBitcoinResource {
 		}
 	)
 	@ApiErrors({ApiError.FOREIGN_BLOCKCHAIN_NETWORK_ISSUE})
-	public String getBitcoinHeight() {
-		Bitcoin bitcoin = Bitcoin.getInstance();
+	public String getFiroHeight() {
+		Firo firo = Firo.getInstance();
 
 		try {
-			Integer height = bitcoin.getBlockchainHeight();
+			Integer height = firo.getBlockchainHeight();
 			if (height == null)
 				throw ApiExceptionFactory.INSTANCE.createException(request, ApiError.FOREIGN_BLOCKCHAIN_NETWORK_ISSUE);
 
@@ -74,7 +73,7 @@ public class CrossChainBitcoinResource {
 	@POST
 	@Path("/walletbalance")
 	@Operation(
-		summary = "Returns BTC balance for hierarchical, deterministic BIP32 wallet",
+		summary = "Returns FIRO balance for hierarchical, deterministic BIP32 wallet",
 		description = "Supply BIP32 'm' private/public key in base58, starting with 'xprv'/'xpub' for mainnet, 'tprv'/'tpub' for testnet",
 		requestBody = @RequestBody(
 			required = true,
@@ -95,16 +94,16 @@ public class CrossChainBitcoinResource {
 	)
 	@ApiErrors({ApiError.INVALID_PRIVATE_KEY, ApiError.FOREIGN_BLOCKCHAIN_NETWORK_ISSUE})
 	@SecurityRequirement(name = "apiKey")
-	public String getBitcoinWalletBalance(@HeaderParam(Security.API_KEY_HEADER) String apiKey, String key58) {
+	public String getFiroWalletBalance(@HeaderParam(Security.API_KEY_HEADER) String apiKey, String key58) {
 		Security.checkApiCallAllowed(request);
 
-		Bitcoin bitcoin = Bitcoin.getInstance();
+		Firo firo = Firo.getInstance();
 
-		if (!bitcoin.isValidDeterministicKey(key58))
+		if (!firo.isValidDeterministicKey(key58))
 			throw ApiExceptionFactory.INSTANCE.createException(request, ApiError.INVALID_PRIVATE_KEY);
 
 		try {
-			Long balance = bitcoin.getWalletBalance(key58);
+			Long balance = firo.getWalletBalance(key58);
 			if (balance == null)
 				throw ApiExceptionFactory.INSTANCE.createException(request, ApiError.FOREIGN_BLOCKCHAIN_NETWORK_ISSUE);
 
@@ -139,16 +138,16 @@ public class CrossChainBitcoinResource {
 	)
 	@ApiErrors({ApiError.INVALID_PRIVATE_KEY, ApiError.FOREIGN_BLOCKCHAIN_NETWORK_ISSUE})
 	@SecurityRequirement(name = "apiKey")
-	public List<SimpleTransaction> getBitcoinWalletTransactions(@HeaderParam(Security.API_KEY_HEADER) String apiKey, String key58) {
+	public List<SimpleTransaction> getFiroWalletTransactions(@HeaderParam(Security.API_KEY_HEADER) String apiKey, String key58) {
 		Security.checkApiCallAllowed(request);
 
-		Bitcoin bitcoin = Bitcoin.getInstance();
+		Firo firo = Firo.getInstance();
 
-		if (!bitcoin.isValidDeterministicKey(key58))
+		if (!firo.isValidDeterministicKey(key58))
 			throw ApiExceptionFactory.INSTANCE.createException(request, ApiError.INVALID_PRIVATE_KEY);
 
 		try {
-			return bitcoin.getWalletTransactions(key58);
+			return firo.getWalletTransactions(key58);
 		} catch (ForeignBlockchainException e) {
 			throw ApiExceptionFactory.INSTANCE.createException(request, ApiError.FOREIGN_BLOCKCHAIN_NETWORK_ISSUE);
 		}
@@ -177,16 +176,16 @@ public class CrossChainBitcoinResource {
 	)
 	@ApiErrors({ApiError.INVALID_PRIVATE_KEY, ApiError.FOREIGN_BLOCKCHAIN_NETWORK_ISSUE})
 	@SecurityRequirement(name = "apiKey")
-	public List<AddressInfo> getBitcoinAddressInfos(@HeaderParam(Security.API_KEY_HEADER) String apiKey, AddressRequest addressRequest) {
+	public List<AddressInfo> getFiroAddressInfos(@HeaderParam(Security.API_KEY_HEADER) String apiKey, AddressRequest addressRequest) {
 		Security.checkApiCallAllowed(request);
 
-		Bitcoin bitcoin = Bitcoin.getInstance();
+		Firo firo = Firo.getInstance();
 
-		if (!bitcoin.isValidDeterministicKey(addressRequest.xpub58))
+		if (!firo.isValidDeterministicKey(addressRequest.xpub58))
 			throw ApiExceptionFactory.INSTANCE.createException(request, ApiError.INVALID_PRIVATE_KEY);
 
 		try {
-			return bitcoin.getWalletAddressInfos(addressRequest.xpub58);
+			return firo.getWalletAddressInfos(addressRequest.xpub58);
 		} catch (ForeignBlockchainException e) {
 			throw ApiExceptionFactory.INSTANCE.createException(request, ApiError.FOREIGN_BLOCKCHAIN_NETWORK_ISSUE);
 		}
@@ -195,14 +194,14 @@ public class CrossChainBitcoinResource {
 	@POST
 	@Path("/send")
 	@Operation(
-		summary = "Sends BTC from hierarchical, deterministic BIP32 wallet to specific address",
-		description = "Currently supports 'legacy' P2PKH Bitcoin addresses and Native SegWit (P2WPKH) addresses. Supply BIP32 'm' private key in base58, starting with 'xprv' for mainnet, 'tprv' for testnet",
+		summary = "Sends FIRO from hierarchical, deterministic BIP32 wallet to specific address",
+		description = "Currently only supports 'legacy' P2PKH Firo addresses. Supply BIP32 'm' private key in base58, starting with 'xprv' for mainnet, 'tprv' for testnet",
 		requestBody = @RequestBody(
 			required = true,
 			content = @Content(
 				mediaType = MediaType.APPLICATION_JSON,
 				schema = @Schema(
-					implementation = BitcoinSendRequest.class
+					implementation = FiroSendRequest.class
 				)
 			)
 		),
@@ -214,33 +213,33 @@ public class CrossChainBitcoinResource {
 	)
 	@ApiErrors({ApiError.INVALID_PRIVATE_KEY, ApiError.INVALID_CRITERIA, ApiError.INVALID_ADDRESS, ApiError.FOREIGN_BLOCKCHAIN_BALANCE_ISSUE, ApiError.FOREIGN_BLOCKCHAIN_NETWORK_ISSUE})
 	@SecurityRequirement(name = "apiKey")
-	public String sendBitcoin(@HeaderParam(Security.API_KEY_HEADER) String apiKey, BitcoinSendRequest bitcoinSendRequest) {
+	public String sendBitcoin(@HeaderParam(Security.API_KEY_HEADER) String apiKey, FiroSendRequest firoSendRequest) {
 		Security.checkApiCallAllowed(request);
 
-		if (bitcoinSendRequest.bitcoinAmount <= 0)
+		if (firoSendRequest.firoAmount <= 0)
 			throw ApiExceptionFactory.INSTANCE.createException(request, ApiError.INVALID_CRITERIA);
 
-		if (bitcoinSendRequest.feePerByte != null && bitcoinSendRequest.feePerByte <= 0)
+		if (firoSendRequest.feePerByte != null && firoSendRequest.feePerByte <= 0)
 			throw ApiExceptionFactory.INSTANCE.createException(request, ApiError.INVALID_CRITERIA);
 
-		Bitcoin bitcoin = Bitcoin.getInstance();
+		Firo firo = Firo.getInstance();
 
-		if (!bitcoin.isValidAddress(bitcoinSendRequest.receivingAddress))
+		if (!firo.isValidAddress(firoSendRequest.receivingAddress))
 			throw ApiExceptionFactory.INSTANCE.createException(request, ApiError.INVALID_ADDRESS);
 
-		if (!bitcoin.isValidDeterministicKey(bitcoinSendRequest.xprv58))
+		if (!firo.isValidDeterministicKey(firoSendRequest.xprv58))
 			throw ApiExceptionFactory.INSTANCE.createException(request, ApiError.INVALID_PRIVATE_KEY);
 
-		Transaction spendTransaction = bitcoin.buildSpend(bitcoinSendRequest.xprv58,
-				bitcoinSendRequest.receivingAddress,
-				bitcoinSendRequest.bitcoinAmount,
-				bitcoinSendRequest.feePerByte);
+		Transaction spendTransaction = firo.buildSpend(firoSendRequest.xprv58,
+				firoSendRequest.receivingAddress,
+				firoSendRequest.firoAmount,
+				firoSendRequest.feePerByte);
 
 		if (spendTransaction == null)
 			throw ApiExceptionFactory.INSTANCE.createException(request, ApiError.FOREIGN_BLOCKCHAIN_BALANCE_ISSUE);
 
 		try {
-			bitcoin.broadcastTransaction(spendTransaction);
+			firo.broadcastTransaction(spendTransaction);
 		} catch (ForeignBlockchainException e) {
 			throw ApiExceptionFactory.INSTANCE.createException(request, ApiError.FOREIGN_BLOCKCHAIN_NETWORK_ISSUE);
 		}
@@ -251,8 +250,8 @@ public class CrossChainBitcoinResource {
 	@GET
 	@Path("/serverinfos")
 	@Operation(
-			summary = "Returns current Bitcoin server configuration",
-			description = "Returns current Bitcoin server locations and use status",
+			summary = "Returns current Firo server configuration",
+			description = "Returns current Firo server locations and use status",
 			responses = {
 					@ApiResponse(
 							content = @Content(
@@ -268,14 +267,14 @@ public class CrossChainBitcoinResource {
 		description = "Returns info for the currently connected server only"
 	) @QueryParam("current") Boolean current) {
 
-		return CrossChainUtils.buildServerConfigurationInfo(Bitcoin.getInstance(), current);
+		return CrossChainUtils.buildServerConfigurationInfo(Firo.getInstance(), current);
 	}
 
 	@GET
 	@Path("/feekb")
 	@Operation(
-			summary = "Returns Bitcoin fee per Kb.",
-			description = "Returns Bitcoin fee per Kb.",
+			summary = "Returns Firo fee per Kb.",
+			description = "Returns Firo fee per Kb.",
 			responses = {
 					@ApiResponse(
 							content = @Content(
@@ -286,17 +285,17 @@ public class CrossChainBitcoinResource {
 					)
 			}
 	)
-	public String getBitcoinFeePerKb() {
-		Bitcoin bitcoin = Bitcoin.getInstance();
+	public String getFiroFeePerKb() {
+		Firo firo = Firo.getInstance();
 
-		return String.valueOf(bitcoin.getFeePerKb().value);
+		return String.valueOf(firo.getFeePerKb().value);
 	}
 
 	@POST
 	@Path("/updatefeekb")
 	@Operation(
-			summary = "Sets Bitcoin fee per Kb.",
-			description = "Sets Bitcoin fee per Kb.",
+			summary = "Sets Firo fee per Kb.",
+			description = "Sets Firo fee per Kb.",
 			requestBody = @RequestBody(
 					required = true,
 					content = @Content(
@@ -315,13 +314,13 @@ public class CrossChainBitcoinResource {
 			}
 	)
 	@ApiErrors({ApiError.INVALID_PRIVATE_KEY, ApiError.INVALID_CRITERIA})
-	public String setBitcoinFeePerKb(@HeaderParam(Security.API_KEY_HEADER) String apiKey, String fee) {
+	public String setFiroFeePerKb(@HeaderParam(Security.API_KEY_HEADER) String apiKey, String fee) {
 		Security.checkApiCallAllowed(request);
 
-		Bitcoin bitcoin = Bitcoin.getInstance();
+		Firo firo = Firo.getInstance();
 
 		try {
-			return CrossChainUtils.setFeePerKb(bitcoin, fee);
+			return CrossChainUtils.setFeePerKb(firo, fee);
 		} catch (IllegalArgumentException e) {
 			throw ApiExceptionFactory.INSTANCE.createException(request, ApiError.INVALID_CRITERIA);
 		}
@@ -330,8 +329,8 @@ public class CrossChainBitcoinResource {
 	@GET
 	@Path("/feeceiling")
 	@Operation(
-			summary = "Returns Bitcoin fee per Kb.",
-			description = "Returns Bitcoin fee per Kb.",
+			summary = "Returns Firo fee per Kb.",
+			description = "Returns Firo fee per Kb.",
 			responses = {
 					@ApiResponse(
 							content = @Content(
@@ -342,17 +341,17 @@ public class CrossChainBitcoinResource {
 					)
 			}
 	)
-	public String getBitcoinFeeCeiling() {
-		Bitcoin bitcoin = Bitcoin.getInstance();
+	public String getFiroFeeCeiling() {
+		Firo firo = Firo.getInstance();
 
-		return String.valueOf(bitcoin.getFeeCeiling());
+		return String.valueOf(firo.getFeeCeiling());
 	}
 
 	@POST
 	@Path("/updatefeeceiling")
 	@Operation(
-			summary = "Sets Bitcoin fee ceiling.",
-			description = "Sets Bitcoin fee ceiling.",
+			summary = "Sets Firo fee ceiling.",
+			description = "Sets Firo fee ceiling.",
 			requestBody = @RequestBody(
 					required = true,
 					content = @Content(
@@ -371,13 +370,13 @@ public class CrossChainBitcoinResource {
 			}
 	)
 	@ApiErrors({ApiError.INVALID_PRIVATE_KEY, ApiError.INVALID_CRITERIA})
-	public String setBitcoinFeeCeiling(@HeaderParam(Security.API_KEY_HEADER) String apiKey, String fee) {
+	public String setFiroFeeCeiling(@HeaderParam(Security.API_KEY_HEADER) String apiKey, String fee) {
 		Security.checkApiCallAllowed(request);
 
-		Bitcoin bitcoin = Bitcoin.getInstance();
+		Firo firo = Firo.getInstance();
 
 		try {
-			return CrossChainUtils.setFeeCeiling(bitcoin, fee);
+			return CrossChainUtils.setFeeCeiling(firo, fee);
 		}
 		catch (IllegalArgumentException e) {
 			throw ApiExceptionFactory.INSTANCE.createException(request, ApiError.INVALID_CRITERIA);

@@ -10,9 +10,11 @@ import org.qortal.crosschain.ElectrumX.Server;
 import org.qortal.crosschain.ChainableServer.ConnectionType;
 import org.qortal.settings.Settings;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.EnumMap;
+import java.util.List;
 import java.util.Map;
 
 public class Litecoin extends Bitcoiny {
@@ -42,18 +44,57 @@ public class Litecoin extends Bitcoiny {
 
 			@Override
 			public Collection<ElectrumX.Server> getServers() {
-				return Arrays.asList(
+				List<ElectrumX.Server> defaultServers = Arrays.asList(
 					// Servers chosen on NO BASIS WHATSOEVER from various sources!
 					// Status verified at https://1209k.com/bitcoin-eye/ele.php?chain=ltc
 					new Server("backup.electrum-ltc.org", Server.ConnectionType.SSL, 443),
+					new Server("5.161.216.180", Server.ConnectionType.SSL, 50002),
+					new Server("5.78.97.174", Server.ConnectionType.SSL, 50002),
+					new Server("46.101.3.154", Server.ConnectionType.SSL, 50002),
+					new Server("188.166.208.106", Server.ConnectionType.SSL, 50002),
 					new Server("electrum.ltc.xurious.com", Server.ConnectionType.SSL, 50002),
 					new Server("electrum.qortal.link", Server.ConnectionType.SSL, 50002),
 					new Server("electrum-ltc.petrkr.net", Server.ConnectionType.SSL, 60002),
+					new Server("electrum-ltc.qortal.online", Server.ConnectionType.SSL, 50002),
 					new Server("electrum1.cipig.net", Server.ConnectionType.SSL, 20063),
 					new Server("electrum2.cipig.net", Server.ConnectionType.SSL, 20063),
 					new Server("electrum3.cipig.net", Server.ConnectionType.SSL, 20063),
+					new Server("fallacy.fiatfaucet.com", Server.ConnectionType.SSL, 50002),
+					new Server("fury.fiatfaucet.com", Server.ConnectionType.SSL, 50002),
+					new Server("lightweight.fiatfaucet.com", Server.ConnectionType.SSL, 50002),
+					new Server("litecoin.stackwallet.com", Server.ConnectionType.SSL, 20063),
+					new Server("ltc.aftrek.org", Server.ConnectionType.SSL, 50002),
 					new Server("ltc.rentonrisk.com", Server.ConnectionType.SSL, 50002)
 				);
+
+				List<ElectrumX.Server> availableServers = new ArrayList<>();
+				Boolean useDefault = Settings.getInstance().getUseLitecoinDefaults();
+				if (useDefault == true) {
+					availableServers.addAll(defaultServers);
+				}
+
+				String[] settingsList = Settings.getInstance().getLitecoinServers();
+				if (settingsList != null) {
+					List<ElectrumX.Server> customServers = new ArrayList<>();
+					for (String setting : settingsList) {
+						String[] colonParts = setting.split(":");
+						if (colonParts.length == 2) {
+							String[] commaParts = colonParts[1].split(",");
+							if (commaParts.length == 2) {
+								String hostname = colonParts[0];
+								int port = Integer.parseInt(commaParts[0].trim());
+								String typeString = commaParts[1].trim().toUpperCase();
+								Server.ConnectionType type = Server.ConnectionType.SSL;
+								if (typeString.equals("TCP")) {
+									type = Server.ConnectionType.TCP;
+								}
+								customServers.add(new Server(hostname, type, port));
+							}
+						}
+					}
+					availableServers.addAll(customServers);
+				}
+				return availableServers;
 			}
 
 			@Override
@@ -63,8 +104,7 @@ public class Litecoin extends Bitcoiny {
 
 			@Override
 			public long getP2shFee(Long timestamp) {
-				// TODO: This will need to be replaced with something better in the near future!
-				return MAINNET_FEE;
+				return this.getFeeCeiling();
 			}
 		},
 		TEST3 {
@@ -117,6 +157,16 @@ public class Litecoin extends Bitcoiny {
 			}
 		};
 
+		private long feeCeiling = MAINNET_FEE;
+
+		public long getFeeCeiling() {
+			return feeCeiling;
+		}
+
+		public void setFeeCeiling(long feeCeiling) {
+			this.feeCeiling = feeCeiling;
+		}
+
 		public abstract NetworkParameters getParams();
 		public abstract Collection<ElectrumX.Server> getServers();
 		public abstract String getGenesisHash();
@@ -130,7 +180,7 @@ public class Litecoin extends Bitcoiny {
 	// Constructors and instance
 
 	private Litecoin(LitecoinNet litecoinNet, BitcoinyBlockchainProvider blockchain, Context bitcoinjContext, String currencyCode) {
-		super(blockchain, bitcoinjContext, currencyCode);
+		super(blockchain, bitcoinjContext, currencyCode, DEFAULT_FEE_PER_KB);
 		this.litecoinNet = litecoinNet;
 
 		LOGGER.info(() -> String.format("Starting Litecoin support using %s", this.litecoinNet.name()));
@@ -159,12 +209,6 @@ public class Litecoin extends Bitcoiny {
 
 	// Actual useful methods for use by other classes
 
-	/** Default Litecoin fee is lower than Bitcoin: only 10sats/byte. */
-	@Override
-	public Coin getFeePerKb() {
-		return DEFAULT_FEE_PER_KB;
-	}
-
 	@Override
 	public long getMinimumOrderAmount() {
 		return MINIMUM_ORDER_AMOUNT;
@@ -181,4 +225,14 @@ public class Litecoin extends Bitcoiny {
 		return this.litecoinNet.getP2shFee(timestamp);
 	}
 
+	@Override
+	public long getFeeCeiling() {
+		return this.litecoinNet.getFeeCeiling();
+	}
+
+	@Override
+	public void setFeeCeiling(long fee) {
+
+		this.litecoinNet.setFeeCeiling( fee );
+	}
 }
